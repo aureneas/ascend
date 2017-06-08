@@ -1,0 +1,19 @@
+#include "../../../include/engine/interface/animation.h"
+
+using namespace engine;
+
+bool Animation::update_frame() {
+    afunc(this);
+    return (widgets.front()->crd == end_condition);
+}
+
+
+/**
+    ------------------------
+    animation_func FUNCTIONS
+    ------------------------
+**/
+
+void animation_fract(Animation* a) {
+    Point v = a->end_condition - a->widgets.front()->crd;
+}
