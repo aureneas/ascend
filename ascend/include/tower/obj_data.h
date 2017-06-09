@@ -29,7 +29,8 @@ enum ACTION {
     MOVE_WEST = 2,
     MOVE_SOUTH = 3,
     DO_NOTHING = 4,
-    WAIT_FOR_INPUT = 5
+    ACT_ATTACK = 5,
+    WAIT_FOR_INPUT = 6
 };
 
 typedef std::forward_list<engine::Animation*> AnimationList;
@@ -58,8 +59,9 @@ struct ActorData: public ObjectData {
     Agent agent;
     ALLEGRO_COLOR tint;
     u_16 def_attr[6];
+    ObjectData* corpse_data;
 
-    ActorData(u_16, u_16, Agent, u_16, u_16, u_16, u_16, u_16, u_16);
+    ActorData(u_16, u_16, Agent, u_16, u_16, u_16, u_16, u_16, u_16, ObjectData*);
     virtual Object* gen_object(Tower*, u_16, u_16, u_16);
 };
 

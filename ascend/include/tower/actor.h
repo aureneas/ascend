@@ -18,6 +18,8 @@ struct Actor: public Object, public charstuff::Inventory {
 
     ALLEGRO_COLOR tint;
 
+    ObjectData* corpse_data;
+
     Actor(u_16, u_16, u_16);
     Actor(ActorData*, asset::asset_package*, u_16, u_16, u_16);
     virtual void draw(int, int);
@@ -45,6 +47,7 @@ AnimationList action_attack(Actor*, Object*, Tower*);
 
 Action lazy_agent(Actor*, Tower*);
 Action simple_move_agent(Actor*, Tower*);
+Action simple_aggressive_agent(Actor*, Tower*);
 
 
 void init_player();

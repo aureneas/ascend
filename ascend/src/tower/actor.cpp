@@ -10,11 +10,12 @@ Actor::Actor(u_16 f, u_16 t, u_16 s) : Object(nullptr, 0, f, t, s), attr{30,10,1
     agent = simple_move_agent;
 }
 
-Actor::Actor(ActorData* d, asset::asset_package* p, u_16 f, u_16 t, u_16 s) : Object(d, p, f, t, s) {
+Actor::Actor(ActorData* d, asset::asset_package* p, u_16 f, u_16 t, u_16 s) : Object(d, p, f, t, s), pp{d->def_attr[MAX_HP], d->def_attr[MAX_SP]} {
     agent = d->agent;
     tint = d->tint;
     for (int i = 5; i >= 0; --i)
         attr[i] = d->def_attr[i];
+    corpse_data = d->corpse_data;
 }
 
 void Actor::draw(int x, int y) {
@@ -49,9 +50,10 @@ void Human::draw(int x, int y) {
 }
 
 
-ActorData::ActorData(u_16 b, u_16 o, Agent a, u_16 d_hp, u_16 d_sp, u_16 d_atk, u_16 d_def, u_16 d_spd, u_16 d_mag) :
+ActorData::ActorData(u_16 b, u_16 o, Agent a, u_16 d_hp, u_16 d_sp, u_16 d_atk, u_16 d_def, u_16 d_spd, u_16 d_mag, ObjectData* cd) :
                         ObjectData(b, o), def_attr{ d_hp, d_sp, d_atk, d_def, d_spd, d_mag } {
     agent = a;
+    corpse_data = cd;
 }
 
 Object* ActorData::gen_object(Tower* tw, u_16 f, u_16 t, u_16 s) {

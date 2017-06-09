@@ -57,8 +57,20 @@ AnimationList action_attack(Actor* actor, Object* target, Tower* tow) {
             if (dmg > 0) {
                 dmg = std::max((int)(((log2(dmg) + 4)*(0.5*log2(actor->attr[ATK]) + 1)) - trg->attr[DEF]), 0);
                 DEBUG_PRINT("DAMAGE : " << dmg);
-                anim.push_front(new engine::ArithmeticAnimation(engine::animation_addition, 6, &trg->pp[MAX_HP], -dmg));
+                anim.push_front(new engine::ArithmeticAnimation(engine::animation_addition, 4, &trg->pp[MAX_HP], -dmg));
                 anim.push_front(new engine::FlashAnimation(&trg->tint, 1, 3));
+                if (dmg >= (int)trg->pp[MAX_HP]) {
+                    //anim.push_front(new engine::FunctionAnimation<engine::TowerState>(ts->reset_twidget, 5, ts));
+                    //anim.push_front(new engine::FunctionAnimation<Floor>(ts->cfloor->refresh_objects, 5, ts->cfloor));
+                    anim.push_front(new engine::FunctionAnimation2<Floor, Object>(ts->cfloor->remove, 5, ts->cfloor, trg));
+                    anim.push_front(new engine::FunctionAnimation2<Tower, Actor>(ts->ctower->remove, 5, ts->ctower, trg));
+                    anim.push_front(new engine::FunctionAnimation2<Floor, Object>(ts->cfloor->insert, 5, ts->cfloor,
+                                                                                 new Object(trg->corpse_data, ts->ctower->assets,
+                                                                                            trg->floor, (trg->pos.x/18) + ts->cfloor->size*(trg->pos.y/18), ts->cfloor->size)));
+                    anim.push_front(new engine::FunctionAnimation<engine::TowerState>(ts->reset_twidget, 5, ts));
+                } else {
+                    DEBUG_PRINT("\tHP : " << (int)trg->pp[MAX_HP]);
+                }
                 int dx = (trg->pos.x/18) - (ts->camera.x/18);
                 int dy = (trg->pos.y/18) - (ts->camera.y/18);
                 t = ts->insert(new engine::TextWidget(dmg,
@@ -72,7 +84,7 @@ AnimationList action_attack(Actor* actor, Object* target, Tower* tow) {
                                                               Point{ (int)(sped*cos(angel)), -(int)(sped*sin(angel)) },
                                                               &t->crd));
                 //anim.push_front(new engine::FadeAnimation(&t->tint, al_map_rgba(0,0,0,0), 18));
-                anim.push_front(new engine::DeletionAnimation<engine::TowerState, engine::Widget>(ts->remove, 54, ts, t));
+                anim.push_front(new engine::FunctionAnimation2<engine::TowerState, engine::Widget>(ts->remove, 54, ts, t));
             } else {
                 // TODO miss message
                 DEBUG_PRINT("MISS");
@@ -102,12 +114,13 @@ AnimationList action_move_west(Actor* actor, Object* target, Tower* tow) {
 
 
 
-ActionFunc afunc[6] =   {
-                            &action_move<NORTH>,//&action_move_north,
-                            &action_move<EAST>,//_east,
-                            &action_move<SOUTH>,//_south,
-                            &action_move<WEST>,//_west,
+ActionFunc afunc[7] =   {
+                            &action_move<NORTH>,
+                            &action_move<EAST>,
+                            &action_move<SOUTH>,
+                            &action_move<WEST>,
                             &action_wait,
+                            &action_attack,
                             nullptr
                         };
 
@@ -134,6 +147,27 @@ Action simple_move_agent(Actor* a, Tower* t) {
     }
     DEBUG_PRINT("\t(" << a->floor << ") No available moves : " << a->pos.x/18 << ", " << a->pos.y/18);
     return { afunc[DO_NOTHING], nullptr, a };
+}
+
+Action simple_aggressive_agent(Actor* a, Tower* t) {
+    if (a->floor != get_player()->floor || (abs(a->pos.x-get_player()->pos.x) > 54 && abs(a->pos.y-get_player()->pos.y) > 54))
+        return simple_move_agent(a, t);
+
+    if ((get_player()->pos.x-a->pos.x == 0 && abs(get_player()->pos.y-a->pos.y) <= 18) || (get_player()->pos.y-a->pos.y == 0 && abs(get_player()->pos.x-a->pos.x) <= 18))
+        return { afunc[ACT_ATTACK], get_player(), a };
+    Floor* f = t->floor[a->floor];
+    //u_16 t = (a->pos.x/18) + f->size*(a->pos.y/18);
+    for (int i = 3; i >= 0; --i) {
+        Point n = translate(a->pos, (Direction)i);
+        if (n.x >= 0 && n.y >= 0 && n.x < (int)18*f->size && n.y < (int)18*f->size
+                && abs(n.x-get_player()->pos.x) <= abs(a->pos.x-get_player()->pos.x)
+                && abs(n.y-get_player()->pos.y) <= abs(a->pos.y-get_player()->pos.y)) {
+            u_16 t = (f->size * (n.y/18)) + (n.x/18);
+            if (f->tile[t] != nullptr && f->tile[t]->occupy == nullptr) {
+                return { afunc[i], nullptr, a };
+            }
+        }
+    }
 }
 
 

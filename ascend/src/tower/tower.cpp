@@ -21,9 +21,10 @@ bool obj_sort(std::shared_ptr<Object> o1, std::shared_ptr<Object> o2) {
 
 void Floor::refresh_objects() {
     //DEBUG_PRINT("Floor::refresh_objects() called.");
-    std::sort(objects.begin(), objects.end(), obj_sort);
+    objects.sort(obj_sort);
+    //std::sort(objects.begin(), objects.end(), obj_sort);
 
-    std::vector<std::shared_ptr<Object> >::iterator it = objects.begin();
+    std::list<std::shared_ptr<Object> >::iterator it = objects.begin();
     u_16 MAX_TILE = size*size;
     u_16 n_tile = (it == objects.end() ? MAX_TILE : ((*it)->pos.y/18)*size + (*it)->pos.x/18);
     //DEBUG_PRINT("\t" << n_tile << "\t" << (it == objects.end() ? 0 : (*it)->bmp));
@@ -40,6 +41,21 @@ void Floor::refresh_objects() {
             }
         } else if (tile[i-1]) {
             tile[i-1]->occupy = nullptr;
+        }
+    }
+}
+
+void Floor::insert(Object* o) {
+    objects.emplace_front(o);
+    refresh_objects();
+}
+
+void Floor::remove(Object* o) {
+    for (std::list<std::shared_ptr<Object> >::iterator it = objects.begin(); it != objects.end(); ++it) {
+        if (o == it->get()) {
+            objects.erase(it);
+            refresh_objects();
+            break;
         }
     }
 }
@@ -75,6 +91,15 @@ Action Tower::get_next_action() {
     active.pop_front();
     active.emplace_back(0.0, a);
     return nxt;
+}
+
+void Tower::remove(Actor* a) {
+    for (std::list<std::pair<double, Actor*> >::iterator it = active.begin(); it != active.end(); ++it) {
+        if (it->second == a) {
+            active.erase(it);
+            break;
+        }
+    }
 }
 
 

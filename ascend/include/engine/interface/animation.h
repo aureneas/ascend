@@ -88,16 +88,28 @@ struct ArithmeticAnimation: public DelayAnimation {
     }
 };
 
-template <typename S, typename T> void animation_deletion(Animation*);
+template <typename T> void animation_funccall(Animation*);
+template <typename S, typename T> void animation_funccall2(Animation*);
+
+template <typename T>
+struct FunctionAnimation: public DelayAnimation {
+    void (T::*ffunc)();
+    T* container;
+
+    FunctionAnimation(void (T::*f)(), u_16 s, T* c) : DelayAnimation(animation_funccall<T>,s) {
+        ffunc = f;
+        container = c;
+    }
+};
 
 template <typename S, typename T>
-struct DeletionAnimation: public DelayAnimation {
+struct FunctionAnimation2: public DelayAnimation {
     S* container;
     T* element;
-    void (S::*del_func)(T*);
+    void (S::*ffunc)(T*);
 
-    DeletionAnimation(void (S::*f)(T*), u_16 s, S* c, T* e) : DelayAnimation(animation_deletion<S, T>, s) {
-        del_func = f;
+    FunctionAnimation2(void (S::*f)(T*), u_16 s, S* c, T* e) : DelayAnimation(animation_funccall2<S, T>, s) {
+        ffunc = f;
         container = c;
         element = e;
     }
@@ -113,11 +125,18 @@ void animation_fallvel(Animation*);
 void animation_addition(Animation*);
 
 
+/**  Function call  **/
+template <typename T>
+void animation_funccall(Animation* a) {
+    FunctionAnimation<T>* fa = dynamic_cast<FunctionAnimation<T>*>(a);
+    ((fa->container)->*(fa->ffunc))();
+}
+
 /**  Element removal  **/
 template <typename S, typename T>
-void animation_deletion(Animation* a) {
-    DeletionAnimation<S, T>* da = dynamic_cast<DeletionAnimation<S, T>*>(a);
-    (da->container->*(da->del_func))(da->element);
+void animation_funccall2(Animation* a) {
+    FunctionAnimation2<S, T>* fa = dynamic_cast<FunctionAnimation2<S, T>*>(a);
+    (fa->container->*(fa->ffunc))(fa->element);
 }
 
 

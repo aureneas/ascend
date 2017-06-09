@@ -6,12 +6,17 @@ namespace tower {
 
 
 /** OBJECTS **/
+ObjectData orb_corpse = {
+                            /* default bmp */ 4,
+                            /* offset */ 2
+                        };
 
 /** ENEMIES **/
 ActorData orb( /* default bmp */ 3,
                 /* offset */ 1,
-                /* agent */ lazy_agent,
-                /* default attributes */ 10, 0, 1, 1, 1, 1
+                /* agent */ simple_aggressive_agent,
+                /* default attributes */ 10, 0, 1, 1, 1, 1,
+                /* corpse */ &orb_corpse
                 );
 
 /** TILES **/

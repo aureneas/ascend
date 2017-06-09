@@ -25,13 +25,15 @@ struct Tile {
 
 struct Floor {
     Tile** tile;
-    std::vector<std::shared_ptr<Object> > objects;
+    std::list<std::shared_ptr<Object> > objects;
     u_16 size;
 
     Floor(u_16);
     ~Floor();
 
     void refresh_objects();
+    void insert(Object*);
+    void remove(Object*);
 };
 
 struct Tower {
@@ -48,6 +50,7 @@ struct Tower {
 
     std::list<std::pair<double, Actor*> > active;
     Action get_next_action();
+    void remove(Actor*);
 };
 
 

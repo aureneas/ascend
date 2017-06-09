@@ -66,8 +66,6 @@ class TowerState: public UIState {
     private:
         TOWER_STATE ts;
 
-        tower::Tower* ctower;
-        tower::Floor* cfloor;
         std::forward_list<TileWidget> twidget;
         std::forward_list<std::shared_ptr<ObjectWidget> > owidget;
 
@@ -86,6 +84,8 @@ class TowerState: public UIState {
         void update_frame();
     public:
         Point camera;
+        tower::Floor* cfloor;
+        tower::Tower* ctower;
 
         TowerState(tower::TowerData*, bool);
         ~TowerState() {}
