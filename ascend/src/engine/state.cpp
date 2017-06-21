@@ -11,13 +11,49 @@
 namespace engine {
 
 
+State::State() {
+    mouse_widget = nullptr;
+}
+
+State::~State() {
+    if (mouse_widget)
+        delete mouse_widget;
+}
+
 int State::update(ALLEGRO_EVENT* e) {
     if (e->type == ALLEGRO_EVENT_TIMER) {
         update_frame();
+        if (mouse_widget) mouse_widget->draw(mouse_crd.x + mouse_afx.x, mouse_crd.y + mouse_afx.y);
         return 0;
     } else {
-        return update_event(e);
+        if (e->type == ALLEGRO_EVENT_MOUSE_AXES) {
+            mouse_crd.x = e->mouse.x;
+            mouse_crd.y = e->mouse.y;
+        }
+        int r = update_event(e);
+        if (e->type == ALLEGRO_EVENT_MOUSE_BUTTON_UP && dynamic_cast<ItemWidget*>(mouse_widget) != nullptr)
+            clear_mouse_widget();
+        return r;
     }
+}
+
+Widget* State::get_mouse_widget() {
+    return mouse_widget;
+}
+
+Widget* State::set_mouse_widget(Widget* w, Point a) {
+    if (mouse_widget)
+        delete mouse_widget;
+
+    mouse_widget = w;
+    mouse_afx = a;
+    return mouse_widget;
+}
+
+void State::clear_mouse_widget() {
+    if (mouse_widget)
+        delete mouse_widget;
+    mouse_widget = nullptr;
 }
 
 /**
@@ -27,33 +63,9 @@ int State::update(ALLEGRO_EVENT* e) {
 **/
 
 int UIState::update_event(ALLEGRO_EVENT* e) {
-    switch (e->type) {
-        case ALLEGRO_EVENT_MOUSE_AXES:
-            {
-                for (WidgetList::iterator it = widget.begin(); it != widget.end(); ++it) {
-                    bool inb = (*it)->in_bounds(e->mouse.x, e->mouse.y);
-                    if (!(*it)->mouse_on && inb) {
-                        (*it)->mouse_on = true;
-                        if ((*it)->mouse_on_func) return (*it)->mouse_on_func(it->get());
-                        break;
-                    } else if ((*it)->mouse_on && !inb) {
-                        (*it)->mouse_on = false;
-                        if ((*it)->mouse_off_func) return (*it)->mouse_off_func(it->get());
-                        break;
-                    }
-                }
-                break;
-            }
-        case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
-            {
-                for (WidgetList::iterator it = widget.begin(); it != widget.end(); ++it) {
-                    if ((*it)->in_bounds(e->mouse.x, e->mouse.y)) {
-                        if ((*it)->click_func) return (*it)->click_func(it->get());
-                        break;
-                    }
-                }
-                break;
-            }
+    for (WidgetList::iterator it = widget.begin(); it != widget.end(); ++it) {
+        int r = (*it)->update_event(e, 0, 0);
+        if (r) return r;
     }
     return 0;
 }
@@ -61,7 +73,7 @@ int UIState::update_event(ALLEGRO_EVENT* e) {
 void UIState::update_frame() {
     update_animation();
     for (WidgetList::reverse_iterator it = widget.rbegin(); it != widget.rend(); ++it)
-        (*it)->draw();
+        (*it)->draw(0, 0);
 }
 
 void UIState::update_animation() {
@@ -114,7 +126,7 @@ void MainMenuState::update_frame() {
     --------------------
 **/
 
-TowerState::TowerState(tower::TowerData* td, bool from_bottom) {
+TowerState::TowerState(tower::TowerData* td, bool from_bottom) : window{ nullptr, nullptr, nullptr } {
     ctower = td->tower_generator(td, from_bottom);
 
     cfloor = ctower->floor[(from_bottom ? 0 : ctower->size-1)];
@@ -122,6 +134,18 @@ TowerState::TowerState(tower::TowerData* td, bool from_bottom) {
 
     camera.x = 18*(iindex%cfloor->size) - 30;
     camera.y = 18*(iindex/cfloor->size) - 30;
+
+    Window* w = new Window(asset::get_tower(27), Point{0, 0});
+    insert(w);
+    tower::Player* p = tower::get_player();
+    w->insert(new TextWidget(al_ustr_new("HP"), Point{13, 12}, asset::get_pixel_bold()));
+    w->insert(new BarWidget(&p->pp[tower::MAX_HP], &p->attr[tower::MAX_HP], Point{34, 15}, 50, 3, al_map_rgb(255, 0, 0)));
+    w->insert(new ValueWidget(&p->pp[tower::MAX_HP], Point{107, 13}));
+    w->insert(new ValueWidget(&p->attr[tower::MAX_HP], Point{144, 13}));
+    w->insert(new TextWidget(al_ustr_new("SP"), Point{13, 26}, asset::get_pixel_bold()));
+    w->insert(new BarWidget(&p->pp[tower::MAX_SP], &p->attr[tower::MAX_SP], Point{34, 29}, 50, 3, al_map_rgb(255, 255, 0)));
+    w->insert(new ValueWidget(&p->pp[tower::MAX_SP], Point{107, 27}));
+    w->insert(new ValueWidget(&p->attr[tower::MAX_SP], Point{144, 27}));
 
     DEBUG_PRINT("Adding widgets...");
     reset_twidget();
@@ -154,6 +178,8 @@ int TowerState::update_event(ALLEGRO_EVENT* e) {
                     ts = WAIT_FOR_INPUT;
                     break;
             }
+            if (ts == PLAYER_ANIMATION)
+                close_windows();
         }
     }
     return 0;
@@ -164,7 +190,7 @@ void TowerState::update_frame() {
 
     if (ts != WAIT_FOR_INPUT) {
         refresh_objects();
-        if (animation.empty()) {
+        if (tanimation.empty()) {
             if (!nxt_action.act)
                 ts = (TOWER_STATE)((ts+1)%3);
 
@@ -184,9 +210,20 @@ void TowerState::update_frame() {
     }
 
     for (TileIterator it = twidget.begin(); it != twidget.end(); ++it)
-        it->draw();
+        it->draw(0, 0);
     for (ObjectIterator oit = owidget.begin(); oit != owidget.end(); ++oit)
-        (*oit)->draw();
+        (*oit)->draw(0, 0);
+
+    AnimationList::iterator prev_it = tanimation.before_begin();
+    for (AnimationList::iterator ait = tanimation.begin(); ait != tanimation.end(); ++ait) {
+        //DEBUG_PRINT("CURRENT ANIMATION: " << cnt++);
+        if ((*ait)->update_frame()) {
+            tanimation.erase_after(prev_it);
+            //DEBUG_PRINT("\tErased animation.");
+            ait = prev_it;
+        } else
+            prev_it = ait;
+    }
 
     UIState::update_frame();
 }
@@ -206,22 +243,89 @@ TOWER_STATE TowerState::interact(int dx, int dy) {
     if (trg) {
         if (!trg->occupy) {
             // MOVE
-            animation.emplace_front(new CameraAnimation(animation_camlinmove, 9, Point{dx,dy}, this));
-            animation.emplace_front(new SpriteAnimation(&tower::get_player()->bmp, 12, 8,
+            tanimation.emplace_front(new CameraAnimation(animation_camlinmove, 9, Point{dx,dy}, this));
+            tanimation.emplace_front(new SpriteAnimation(&tower::get_player()->bmp, 12, 8,
                                                             4, asset::get_tower(2),
                                                             3, asset::get_tower(1),
                                                             4, asset::get_tower(3),
                                                             1, asset::get_tower(1)));
-            animation.emplace_front(new MoveAnimation(animation_linmove, 9, Point{dx,dy}, ppos));
+            tanimation.emplace_front(new MoveAnimation(animation_linmove, 9, Point{dx,dy}, ppos));
         } else if (tower::Actor* target = dynamic_cast<tower::Actor*>(trg->occupy)) {
             // ATTACK
             insert_animation(tower::action_attack(tower::get_player(), target, ctower));
+        } else if (tower::Container* cont = dynamic_cast<tower::Container*>(trg->occupy)) {
+            open_character();
+            open_inventory();
+            open_container(cont);
+            return WAIT_FOR_INPUT;
         } else {
             return WAIT_FOR_INPUT;
         }
         return PLAYER_ANIMATION;
     }
     return WAIT_FOR_INPUT;
+}
+
+void TowerState::open_character() {
+    if (window[0]) {
+        if (window[0]->bmp == asset::get_tower(28))
+            return;
+        else
+            close_widget(window[0]);
+    }
+
+    window[0] = new Window(asset::get_tower(28), Point{ -123, 68 });
+    insert(window[0]);
+    tower::Player* p = tower::get_player();
+    window[0]->insert(new ValueWidget(&p->attr[tower::ATK], Point{62, 9}));
+    window[0]->insert(new ValueWidget(&p->attr[tower::DEF], Point{62, 22}));
+    window[0]->insert(new ValueWidget(&p->attr[tower::SPD], Point{62, 35}));
+    window[0]->insert(new ValueWidget(&p->attr[tower::MAG], Point{62, 48}));
+    animation.emplace_front(new MoveAnimation(animation_linmove, 30, Point{ 153, 0 }, &window[0]->crd));
+}
+
+void TowerState::open_inventory() {
+    if (window[1]) {
+        if (window[1]->bmp == asset::get_tower(29))
+            return;
+        else
+            close_widget(window[1]);
+    }
+
+    window[1] = new InventoryWindow(tower::get_player(), true, Point{ -123, 151 });
+    insert(window[1]);
+    // TODO ???
+    animation.emplace_front(new MoveAnimation(animation_linmove, 30, Point{ 153, 0 }, &window[1]->crd));
+}
+
+void TowerState::open_container(tower::Container* cont) {
+    if (window[2]) {
+        if (window[1]->bmp == asset::get_tower(30))
+            return;
+        else
+            close_widget(window[2]);
+    }
+
+    window[2] = new InventoryWindow(cont, false, Point{ 400, 219 });
+    insert(window[2]);
+    animation.emplace_front(new MoveAnimation(animation_linmove, 30, Point{ -153, 0 }, &window[2]->crd));
+}
+
+void TowerState::close_windows() {
+    for (int i = 2; i >= 0; --i) {
+        if (window[i]) {
+            close_widget(window[i]);
+            window[i] = nullptr;
+        }
+    }
+}
+
+void TowerState::close_widget(Widget* w) {
+    if (w->crd.x < 150)
+        animation.emplace_front(new MoveAnimation(animation_linmove, 30, Point{ -153, 0 }, &w->crd));
+    else
+        animation.emplace_front(new MoveAnimation(animation_linmove, 30, Point{ 153, 0 }, &w->crd));
+    animation.emplace_front(new FunctionAnimation2<TowerState, Widget>(this->remove, 30, this, w));
 }
 
 /*
@@ -236,8 +340,10 @@ bool TowerState::tile_in_frame(u_16 t, int dx, int dy) {
 }
 */
 
-void TowerState::insert_animation(tower::AnimationList anim) {
-    for (tower::AnimationList::iterator it = anim.begin(); it != anim.end(); ++it)
+void TowerState::insert_animation(tower::AnimationListPair anim) {
+    for (tower::AnimationList::iterator it = anim.first.begin(); it != anim.first.end(); ++it)
+        tanimation.emplace_front(*it);
+    for (tower::AnimationList::iterator it = anim.second.begin(); it != anim.second.end(); ++it)
         animation.emplace_front(*it);
 }
 
@@ -301,6 +407,8 @@ void TowerState::add_rows(TowerIterator prev, int min_r, int max_r) {
 void TowerState::reset_twidget() {
     owidget.clear();
     twidget.clear();
+    cfloor->refresh_objects();
+
     TowerIterator prev = TowerIterator(twidget.before_begin(), owidget.before_begin());
     add_rows(prev, MIN_DRAW, MAX_DRAW);
     /*

@@ -29,14 +29,28 @@ void Object::draw(int x, int y) {
 }
 
 
+Wall::Wall(ObjectData* d, asset::asset_package* p, u_16 f, u_16 t, u_16 s) : Object(d, p, f, t, s) {}
+
+void Wall::draw(int x, int y) {
+    Object::draw(x, y);
+}
+
+
 Portal::Portal(Direction fc, u_16 f, u_16 t, u_16 s) : Object(asset::get_tower(4), 9, f, t, s) {
     face = fc;
 }
 
 
+Container::Container(ObjectData* d, asset::asset_package* p, u_16 f, u_16 t, u_16 s) : Object(d, p, f, t, s), charstuff::Inventory(18) {}
+
+
 ObjectData::ObjectData(u_16 b, u_16 o) {
     bmp = b;
     offset = o;
+}
+
+Object* ObjectData::gen_object(asset::asset_package* p, u_16 f, u_16 t, u_16 s) {
+    return new Object(this, p, f, t, s);
 }
 
 Object* ObjectData::gen_object(Tower* tw, u_16 f, u_16 t, u_16 s) {

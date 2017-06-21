@@ -19,26 +19,63 @@ struct Widget {
     Point crd;
     bool mouse_on;
 
+    virtual void draw(int, int);
+    virtual bool in_bounds(int, int);
+
+    Widget();
+    Widget(ALLEGRO_BITMAP*, Point);
+    virtual ~Widget() {}
+    virtual int update_event(ALLEGRO_EVENT* e, int x, int y) { return 0; }
+};
+
+struct FWidget: public Widget {
     widg_func mouse_on_func;
     widg_func mouse_off_func;
     widg_func click_func;
 
-    virtual void draw();
-    virtual bool in_bounds(int, int);
-
-    Widget();
-    virtual ~Widget() {}
+    FWidget();
+    virtual int update_event(ALLEGRO_EVENT*, int, int);
 };
 
 struct TextWidget: public Widget {
     ALLEGRO_USTR* text;
+    ALLEGRO_FONT* font;
+    bool protect_text;
+    int flags;
+    int width;
 
+    TextWidget(ALLEGRO_USTR*, Point, ALLEGRO_FONT*, int = 0, bool = false);
     TextWidget(int, Point);
-    void draw();
+    virtual ~TextWidget();
+    virtual void init();
+    virtual void draw(int, int);
     bool in_bounds(int, int);
 };
 
-struct TileWidget: public Widget {
+struct ValueWidget: public TextWidget {
+    u_16* value;
+    u_16 last;
+    int mod;
+
+    ValueWidget(u_16*, Point, int = 0);
+    void init();
+    void draw(int, int);
+};
+
+struct BarWidget: public Widget {
+    int width;
+    int height;
+    u_16* cur_value;
+    u_16 cur_last;
+    u_16* max_value;
+    u_16 max_last;
+    float perc;
+
+    BarWidget(u_16*, u_16*, Point, int, int, ALLEGRO_COLOR);
+    void draw(int, int);
+};
+
+struct TileWidget: public FWidget {
     tower::Floor* cfloor;
     TileWidget* enws[4];
     Widget* obj;
@@ -49,14 +86,49 @@ struct TileWidget: public Widget {
 
 };
 
-struct ObjectWidget: public Widget {
+struct ObjectWidget: public FWidget {
     tower::Object* obj;
     Widget** parent;
 
     ObjectWidget(tower::Object*, tower::Floor*, Point*);
     void reset_crd(Point*);
-    virtual void draw();
+    virtual void draw(int, int);
 };
+
+struct ItemWidget: public FWidget {
+    charstuff::Item** item;
+
+    ItemWidget(charstuff::Item**, Point, widg_func = nullptr, ALLEGRO_BITMAP* = nullptr);
+    int update_event(ALLEGRO_EVENT*, int, int);
+    void draw(int, int);
+};
+
+typedef std::list<std::unique_ptr<Widget> > WidgetList;
+
+struct Window: public Widget {
+    WidgetList child;
+
+    Window(ALLEGRO_BITMAP* b, Point p) : Widget(b, p) {}
+    Widget* insert(Widget*);
+    void draw(int, int);
+    int update_event(ALLEGRO_EVENT*, int, int);
+};
+
+struct InfoWindow: public Window {
+    charstuff::Item* item;
+
+    InfoWindow(charstuff::Item*, Point);
+};
+
+struct InventoryWindow: public Window {
+    InventoryWindow(charstuff::Inventory*, bool, Point);
+};
+
+
+int wfunc_item_mouse_on(Widget*);
+int wfunc_item_mouse_off(Widget*);
+int wfunc_item_take(Widget*);
+int wfunc_item_interact(Widget*);
 
 
 }

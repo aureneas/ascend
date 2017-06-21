@@ -26,3 +26,4 @@ double rand2<double>(double n, u_16 d) {
 }
 
 template u_16 rand2<u_16>(u_16, u_16);
+template int rand2<int>(int, u_16);

@@ -9,6 +9,7 @@
 
 #include "../../include/engine/state.h"
 #include "../../include/asset/asset.h"
+#include "../../include/charstuff/item_data.h"
 #include "../../include/tower/actor.h"
 #include "../../include/graphics.h"
 // TODO remove when done with debugging
@@ -101,9 +102,9 @@ void init() {
         throw "Allegro event queue failed to initialize.";
 
     al_register_event_source(al_queue, al_get_display_event_source(al_display));
-    al_register_event_source(al_queue, al_get_timer_event_source(al_timer));
     al_register_event_source(al_queue, al_get_mouse_event_source());
     al_register_event_source(al_queue, al_get_keyboard_event_source());
+    al_register_event_source(al_queue, al_get_timer_event_source(al_timer));
 
     // set seed for rand()
     srand(1);
@@ -111,6 +112,7 @@ void init() {
 
     // initialize stuff
     asset::init();
+    charstuff::init();
     tower::init();
     tower::init_player();
     tower::new_player();
@@ -129,7 +131,15 @@ void run() {
     al_start_timer(al_timer);
 
     while (true) {
-        al_wait_for_event(al_queue, &e);
+        if (al_is_event_queue_empty(al_queue)) {
+            al_wait_for_event(al_queue, &e);
+        } else {
+            while (al_get_next_event(al_queue, &e)) {
+                if (e.type != ALLEGRO_EVENT_TIMER)
+                    break;
+            }
+        }
+
         if (e.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
             break;
 

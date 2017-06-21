@@ -18,38 +18,37 @@ Tower* c_tower = nullptr;
 
 u_16 RoomData_Simple::generate_room(Tower* tw, u_16 f, u_16 t) {
     u_16 sparcity = 0;
-    u_16 dx = rsize_min + rand2<u_16>(rsize_rng, 1);
-    u_16 dy = rsize_min + rand2<u_16>(rsize_rng, 1);
+    u_16 dx = rsize_min + rand2<u_16>(rsize_rng);
+    u_16 dy = rsize_min + rand2<u_16>(rsize_rng);
     if (rect) {
         u_16 s = tw->floor[f]->size;
         if (dx < t%s) {
-            dx *= 2;
             t -= dx;
+            dx *= 2;
         } else {
             u_16 dt = (t%s) - 1;
             dx += dt;
             t -= dt;
         }
         if (dy < t/s) {
-            dy *= 2;
             t -= (s*dy);
+            dy *= 2;
         } else {
-            u_16 nt = s + (t%s);
-            dy += (t/s) - (nt/s);
-            t = nt;
+            dy += (t/s) - 1;
+            t = s + (t%s);
         }
         if (dx >= s-(t%s)-1)
             dx = s-(t%s)-1;
         if (dy >= s-(t/s)-1)
             dy = s-(t/s)-1;
-        for (u_16 i = dx; i > 0; --i) {
-            for (u_16 j = dy; j > 0; --j) {
-                u_16 t2 = t + (i-1) + (tw->floor[f]->size * j);
+        for (int i = dx; i >= 0; --i) {
+            for (int j = dy; j >= 0; --j) {
+                u_16 t2 = t + i + (s*j);
                 if (!tw->floor[f]->tile[t2]) {
                     Tile* tl = new Tile();
                     tl->floor = tw->assets->get(tile->bmp);
                     // place objects
-                    u_16 trand = rand2<u_16>(MAX_PROB, 1);
+                    u_16 trand = rand2<u_16>(MAX_PROB);
                     for (std::map<u_16, ObjectData*>::iterator it = tile->obj_t.begin(); it != tile->obj_t.end(); ++it) {
                         if (it->first > trand) {
                             tl->occupy = it->second->gen_object(tw, f, t2, tw->floor[f]->size);
@@ -126,8 +125,30 @@ Tower* standard_generator(TowerData* td, bool from_bottom) {
         while(sparcity[f] < td->sparcity) {
             // place next room
             u_16 tile = rooms[rand()%rooms.size()];
-            u_16 nxt = (td->size*std::min(td->size-2, std::max((u_16)1, (tile/td->size) + (rsign()*rand2<u_16>(td->size/10, 2))))) +
-                        std::min(td->size-2, std::max((u_16)1, (tile%td->size) + (rsign()*rand2<u_16>(td->size/10, 2))));
+            u_16 nxt = tile;
+            int dx = 0, dy = 0;
+            if (tile/td->size < td->size/3)
+                dy = 1 - (tile/td->size);
+            else
+                dy = 1 - (td->size/3);
+            dy = std::min(dy + rand2<int>((int)(td->size*2/3)), (int)(td->size - (tile/td->size) - 1));
+            if (tile%td->size < td->size/3)
+                dx = 1 - (tile%td->size);
+            else
+                dx = 1 - (td->size/3);
+            dx = std::min(dx + rand2<int>((int)(td->size*2/3)), (int)(td->size - (tile%td->size) - 1));
+
+            /*rsign()*rand2<int>((int)(td->size/10), 2);
+            int dx = rsign()*rand2<int>((int)(td->size/10), 2);
+            if (-dx >= tile%td->size)
+                dx = 1 - (tile%td->size);
+            else if ((tile%td->size) + dx >= td->size)
+                dx = td->size - (tile%td->size) - 1;
+            if (-dy >= tile/td->size)
+                dy = 1 - (tile/td->size);
+            else if ((tile/td->size) + dy >= td->size)
+                dy = td->size - (tile/td->size) - 1;*/
+            nxt += dx + (td->size*dy);
 
             rooms.push_back(nxt);
             // determine properties of room
@@ -140,8 +161,8 @@ Tower* standard_generator(TowerData* td, bool from_bottom) {
                 }
             }
             // place passage between previous room and current room
-            int dy = (nxt/td->size) - (tile/td->size);
-            int dx = (nxt%td->size) - (tile%td->size);
+            /*int dy = (nxt/td->size) - (tile/td->size);
+            int dx = (nxt%td->size) - (tile%td->size);*/
             if ((dy+dx > 0 && dy-dx > 0) || (dy+dx < 0 && dy-dx < 0)) // abs(dx) < abs(dy)
                 sparcity[f] += construct_passage(td, f, tile, dx, 1) + construct_passage(td, f, tile+dx, dy, td->size);
             else

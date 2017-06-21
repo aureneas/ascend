@@ -9,15 +9,29 @@ namespace asset {
 /** ASSET PACKAGES **/
 asset_package* tower_asset;
 asset_package* tower_asset_extra;
+
+ALLEGRO_FONT* pixel_small_font;
+ALLEGRO_FONT* pixel_large_font;
 ALLEGRO_FONT* pixel_bold_font;
 
 void init() {
     tower_asset = asset_package_data{ "lib/package/tower.png", "data/towers/tower_asset.dat", true }.load();
+
+    pixel_small_font = al_load_bitmap_font("lib/font/pixel_small.png");
+    pixel_large_font = al_load_bitmap_font("lib/font/pixel_large.png");
     pixel_bold_font = al_load_bitmap_font("lib/font/pixel_bold.png");
 }
 
 ALLEGRO_BITMAP* get_tower(u_16 index) {
     return tower_asset->get(index);
+}
+
+ALLEGRO_FONT* get_pixel_small() {
+    return pixel_small_font;
+}
+
+ALLEGRO_FONT* get_pixel_large() {
+    return pixel_large_font;
 }
 
 ALLEGRO_FONT* get_pixel_bold() {

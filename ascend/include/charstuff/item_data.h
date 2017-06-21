@@ -14,17 +14,21 @@ struct FeatureData {
 struct EquipData {
     u_16 bmp;
     EQUIPMENT_SLOT slot;
-    int attr_m[6];
+    u_16 attrm[6];
 
     u_16 ftr_num;
+    FeatureData* ftr_list;
+
+    ALLEGRO_USTR* name;
+    ALLEGRO_USTR* desc;
 
     ALLEGRO_COLOR tint;
-    FeatureData* ftr_list;
 
     Equip* gen_item();
 };
 
 
+void init();
 EquipData* get_std_clothes();
 
 

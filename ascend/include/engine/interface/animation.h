@@ -6,6 +6,7 @@
 #include <allegro5/allegro.h>
 #include "../../types.h"
 #include "../../point.h"
+#include "../../_debug.h"
 
 namespace engine {
 

@@ -31,8 +31,13 @@ struct asset_package_data {
     asset_package* load();
 };
 
+
 void init();
+
 ALLEGRO_BITMAP* get_tower(u_16);
+
+ALLEGRO_FONT* get_pixel_small();
+ALLEGRO_FONT* get_pixel_large();
 ALLEGRO_FONT* get_pixel_bold();
 
 

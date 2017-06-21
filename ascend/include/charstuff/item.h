@@ -13,16 +13,20 @@ struct Item {
 
     ALLEGRO_BITMAP* bmp;
     ALLEGRO_COLOR tint;
-    // stuff
+
+    ALLEGRO_USTR* name;
+    ALLEGRO_USTR* desc;
 
     Item(ALLEGRO_BITMAP*, ALLEGRO_COLOR);
+    virtual ~Item();
+    virtual void interact() {}
     virtual void draw(int, int, int);
 };
 
 
 enum EQUIPMENT_SLOT {
-    WEAPON_MELEE = 0,
-    WEAPON_RANGED = 1,
+    WEAPON_PRIMARY = 0,
+    WEAPON_SECONDARY = 1,
     HEAD = 2,
     BODY = 3,
     ACCESSORY = 4,
@@ -36,10 +40,15 @@ struct Feature {
 
 struct Equip: public Item {
     EQUIPMENT_SLOT slot;
-    int attr_m[6];
-    std::forward_list<Feature> ftr;
+    bool equipped;
+    u_16 attrm[6];
+
+    Feature* ftr;
+    u_16 ftr_num;
 
     Equip(ALLEGRO_BITMAP*, ALLEGRO_COLOR, EQUIPMENT_SLOT);
+    ~Equip();
+    void interact();
     void draw(int, int, int);
 };
 
@@ -48,9 +57,12 @@ struct Inventory {
     u_16 size;
     Item** item;
 
+    Inventory(u_16);
+    virtual ~Inventory();
+    bool check(Item**);
+    Item** get(u_16);
     void insert(Item*);
     void insert(Item*, u_16);
-    void expand(u_16);
 };
 
 

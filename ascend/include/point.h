@@ -6,7 +6,7 @@ struct Point {
     int y;
 
     bool operator==(Point&);
-    const Point& operator-(Point&);
+    Point operator-(Point&);
     void operator+=(Point&);
 };
 

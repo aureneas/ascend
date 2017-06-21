@@ -98,6 +98,23 @@ struct TowerData {
 };
 
 
+template <typename T>
+SubObjectData<T>::SubObjectData(u_16 b, u_16 o) : ObjectData(b,o) {
+    // TODO stuff???
+}
+
+template <typename T>
+Object* SubObjectData<T>::gen_object(asset::asset_package* p, u_16 f, u_16 t, u_16 s) {
+    return new T(this, p, f, t, s);
+}
+
+template <typename T>
+Object* SubObjectData<T>::gen_object(Tower* tw, u_16 f, u_16 t, u_16 s) {
+    tw->floor[f]->objects.emplace_back(new T(this, tw->assets, f, t, s));
+    return tw->floor[f]->objects.back().get();
+}
+
+
 }
 
 #endif // AT_TOWER_H

@@ -19,7 +19,15 @@ struct ObjectData {
     u_16 offset;
 
     ObjectData(u_16, u_16);
+    virtual Object* gen_object(asset::asset_package*, u_16, u_16, u_16);
     virtual Object* gen_object(Tower*, u_16, u_16, u_16);
+};
+
+template <typename T>
+struct SubObjectData: public ObjectData {
+    SubObjectData(u_16, u_16);
+    Object* gen_object(asset::asset_package*, u_16, u_16, u_16);
+    Object* gen_object(Tower*, u_16, u_16, u_16);
 };
 
 
@@ -34,7 +42,8 @@ enum ACTION {
 };
 
 typedef std::forward_list<engine::Animation*> AnimationList;
-typedef AnimationList (*ActionFunc)(Actor*, Object*, Tower*);
+typedef std::pair<AnimationList, AnimationList> AnimationListPair;
+typedef AnimationListPair (*ActionFunc)(Actor*, Object*, Tower*);
 
 struct Action {
     ActionFunc act;

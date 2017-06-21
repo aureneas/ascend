@@ -7,13 +7,14 @@
 #include "../types.h"
 #include "position.h"
 #include "obj_data.h"
+#include "../charstuff/item.h"
 
 namespace tower {
 
 
 struct Object {
     ALLEGRO_BITMAP* bmp;
-    u_16 offset;
+    int offset;
 
     Point pos;
     u_16 floor;
@@ -24,8 +25,17 @@ struct Object {
     virtual void draw(int, int);
 };
 
+struct Wall: public Object {
+    Wall(ObjectData*, asset::asset_package*, u_16, u_16, u_16);
+    void draw(int, int);
+};
+
 struct Portal: public Object {
     Portal(Direction, u_16, u_16, u_16);
+};
+
+struct Container: public Object, public charstuff::Inventory {
+    Container(ObjectData*, asset::asset_package*, u_16, u_16, u_16);
 };
 
 

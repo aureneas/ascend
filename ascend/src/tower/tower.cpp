@@ -32,9 +32,13 @@ void Floor::refresh_objects() {
     for (u_16 i = MAX_TILE; i > 0; --i) {
         if (i-1 == n_tile) {
             if (tile[i-1]) {
+                //DEBUG_PRINT("\t" << n_tile << "\t" << (*it)->bmp);
                 tile[i-1]->occupy = (it++)->get();
                 n_tile = (it == objects.end() ? MAX_TILE : ((*it)->pos.y/18)*size + (*it)->pos.x/18);
-                //DEBUG_PRINT("\t" << n_tile << "\t" << (it == objects.end() ? 0 : (*it)->bmp));
+                if (n_tile == i-1) {
+                    DEBUG_PRINT("IT HAPPENED");
+                    //throw "Two objects trying to occupy the same tile.";
+                }
                 //DEBUG_PRINT("n_tile = " << n_tile);
             } else {
                 // TODO error handlin
@@ -47,14 +51,12 @@ void Floor::refresh_objects() {
 
 void Floor::insert(Object* o) {
     objects.emplace_front(o);
-    refresh_objects();
 }
 
 void Floor::remove(Object* o) {
     for (std::list<std::shared_ptr<Object> >::iterator it = objects.begin(); it != objects.end(); ++it) {
         if (o == it->get()) {
             objects.erase(it);
-            refresh_objects();
             break;
         }
     }

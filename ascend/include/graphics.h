@@ -18,7 +18,10 @@ void clear_screen_tint();
 
 void draw(ALLEGRO_BITMAP*, int, int, int);
 void draw_tinted(ALLEGRO_BITMAP*, ALLEGRO_COLOR, int, int, int, bool = false);
+void draw_tinted_bar(ALLEGRO_BITMAP*, ALLEGRO_COLOR, int, int, float, float, int, bool = false);
+
 void draw_ustr(ALLEGRO_FONT*, ALLEGRO_COLOR, ALLEGRO_USTR*, int, int, int, bool = false);
+void draw_ustr_multiline(ALLEGRO_FONT*, ALLEGRO_COLOR, ALLEGRO_USTR*, int, int, int, int, int, bool = false);
 
 }
 

@@ -179,7 +179,7 @@ void animation_fallvel(Animation* a) {
 /**  Number addition/subtraction  **/
 void animation_addition(Animation* a) {
     ArithmeticAnimation* aa = dynamic_cast<ArithmeticAnimation*>(a);
-    if (-aa->change > *aa->value)
+    if (-aa->change > (int)*aa->value)
         *aa->value = 0;
     else
         *aa->value += aa->change;

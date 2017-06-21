@@ -104,11 +104,16 @@ void clear_screen_tint() {
 }
 
 
+void draw_tinted_bar(ALLEGRO_BITMAP* bmp, ALLEGRO_COLOR color, int x, int y, float w, float h, int flags, bool override_scr_tint) {
+    if (!override_scr_tint && screen_tint_alpha > 0)
+        color = color_multmix(color, screen_tint);
+    al_draw_tinted_scaled_bitmap(bmp, color, 0, 0, 1, 1, x, y, w, h, flags);
+}
+
 void draw_tinted(ALLEGRO_BITMAP* bmp, ALLEGRO_COLOR color, int x, int y, int flags, bool override_scr_tint) {
     if (!override_scr_tint && screen_tint_alpha > 0)
-        draw_tinted(bmp, color_multmix(color, screen_tint), x, y, flags, true);
-    else
-        al_draw_tinted_bitmap(bmp, color, x, y, flags);
+        color = color_multmix(color, screen_tint);
+    al_draw_tinted_bitmap(bmp, color, x, y, flags);
 }
 
 void draw(ALLEGRO_BITMAP* bmp, int x, int y, int flags) {
@@ -118,8 +123,14 @@ void draw(ALLEGRO_BITMAP* bmp, int x, int y, int flags) {
         al_draw_bitmap(bmp, x, y, flags);
 }
 
+void draw_ustr_multiline(ALLEGRO_FONT* font, ALLEGRO_COLOR color, ALLEGRO_USTR* ustr, int x, int y, int width, int padding, int flags, bool override_scr_tint) {
+    if (!override_scr_tint && screen_tint_alpha > 0)
+        color = color_multmix(color, screen_tint);
+    al_draw_multiline_ustr(font, color, x, y, width, al_get_font_line_height(font) + padding, flags, ustr);
+}
+
 void draw_ustr(ALLEGRO_FONT* font, ALLEGRO_COLOR color, ALLEGRO_USTR* ustr, int x, int y, int flags, bool override_scr_tint) {
-    if (!override_scr_tint)
+    if (!override_scr_tint && screen_tint_alpha > 0)
         color = color_multmix(color, screen_tint);
     al_draw_ustr(font, color, x, y, flags, ustr);
 }
