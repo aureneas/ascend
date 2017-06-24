@@ -32,7 +32,9 @@ struct Floor {
     ~Floor();
 
     void refresh_objects();
+    std::shared_ptr<Object>* get_object(Object*);
     void insert(Object*);
+    void insert_ptr(std::shared_ptr<Object>*);
     void remove(Object*);
 };
 
@@ -94,6 +96,8 @@ struct TowerData {
 
     u_16 basic_t;
     u_16 wall_t;
+    ObjectData* portal_t;
+
     std::map<u_16, RoomData*> room_t;
 };
 

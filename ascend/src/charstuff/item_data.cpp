@@ -13,6 +13,14 @@ EquipData std_clothes_dt = { /* base bitmap */          5,
                                 /* feature list */      nullptr
                             };
 
+EquipData op_armor =        {
+                                /* base bitmap*/        5,
+                                /* equip slot */        BODY,
+                                /* attribute mods */    { 999, 999, 99, 99, 99, 99 },
+                                /* no features */       1
+                            };
+
+
 void init() {
     // STANDARD CLOTHES
     std_clothes_dt.tint = al_map_rgb(207,184,159);
@@ -20,10 +28,21 @@ void init() {
     std_clothes_dt.ftr_list[0] = { 23, al_map_rgb(56,71,48) };
     std_clothes_dt.name = al_ustr_new("CLOTHES");
     std_clothes_dt.desc = al_ustr_new("Some normal clothes. Good for when you want to not be naked.");
+
+    // OVERPOWERED ARMOR
+    op_armor.tint = al_map_rgb(255,0,255);
+    op_armor.ftr_list = new FeatureData[1];
+    op_armor.ftr_list[0] = { 9, al_map_rgb(255,0,255) };
+    op_armor.name = al_ustr_new("OP ARMOR");
+    op_armor.desc = al_ustr_new("Ridiculously powerful armor (now in magenta!).");
 }
 
 EquipData* get_std_clothes() {
     return &std_clothes_dt;
+}
+
+EquipData* get_op_armor() {
+    return &op_armor;
 }
 
 

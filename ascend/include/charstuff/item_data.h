@@ -30,6 +30,7 @@ struct EquipData {
 
 void init();
 EquipData* get_std_clothes();
+EquipData* get_op_armor();
 
 
 }

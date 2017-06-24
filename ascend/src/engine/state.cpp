@@ -138,14 +138,14 @@ TowerState::TowerState(tower::TowerData* td, bool from_bottom) : window{ nullptr
     Window* w = new Window(asset::get_tower(27), Point{0, 0});
     insert(w);
     tower::Player* p = tower::get_player();
-    w->insert(new TextWidget(al_ustr_new("HP"), Point{13, 12}, asset::get_pixel_bold()));
     w->insert(new BarWidget(&p->pp[tower::MAX_HP], &p->attr[tower::MAX_HP], Point{34, 15}, 50, 3, al_map_rgb(255, 0, 0)));
     w->insert(new ValueWidget(&p->pp[tower::MAX_HP], Point{107, 13}));
     w->insert(new ValueWidget(&p->attr[tower::MAX_HP], Point{144, 13}));
-    w->insert(new TextWidget(al_ustr_new("SP"), Point{13, 26}, asset::get_pixel_bold()));
     w->insert(new BarWidget(&p->pp[tower::MAX_SP], &p->attr[tower::MAX_SP], Point{34, 29}, 50, 3, al_map_rgb(255, 255, 0)));
     w->insert(new ValueWidget(&p->pp[tower::MAX_SP], Point{107, 27}));
     w->insert(new ValueWidget(&p->attr[tower::MAX_SP], Point{144, 27}));
+    w->insert(new ValueWidget(&p->ap, Point{370, 13}, 0, ALLEGRO_ALIGN_RIGHT));
+    w->insert(new ValueWidget(&p->ap, Point{370, 27}, 0, ALLEGRO_ALIGN_RIGHT));
 
     DEBUG_PRINT("Adding widgets...");
     reset_twidget();
@@ -209,10 +209,13 @@ void TowerState::update_frame() {
         }
     }
 
-    for (TileIterator it = twidget.begin(); it != twidget.end(); ++it)
+    for (TileIterator it = twidget.begin(); it != twidget.end(); ++it) {
         it->draw(0, 0);
+        if (it->obj)    it->obj->draw(0, 0);
+    }/*
     for (ObjectIterator oit = owidget.begin(); oit != owidget.end(); ++oit)
         (*oit)->draw(0, 0);
+        */
 
     AnimationList::iterator prev_it = tanimation.before_begin();
     for (AnimationList::iterator ait = tanimation.begin(); ait != tanimation.end(); ++ait) {
@@ -250,16 +253,11 @@ TOWER_STATE TowerState::interact(int dx, int dy) {
                                                             4, asset::get_tower(3),
                                                             1, asset::get_tower(1)));
             tanimation.emplace_front(new MoveAnimation(animation_linmove, 9, Point{dx,dy}, ppos));
-        } else if (tower::Actor* target = dynamic_cast<tower::Actor*>(trg->occupy)) {
-            // ATTACK
-            insert_animation(tower::action_attack(tower::get_player(), target, ctower));
-        } else if (tower::Container* cont = dynamic_cast<tower::Container*>(trg->occupy)) {
-            open_character();
-            open_inventory();
-            open_container(cont);
-            return WAIT_FOR_INPUT;
+            //DEBUG_PRINT("Player position: <" << ((ppos->x+dx)/18) << ", " << ((ppos->y+dy)/18) << ">");
         } else {
-            return WAIT_FOR_INPUT;
+            insert_animation(trg->occupy->interact(tower::get_player(), ctower));
+            if (tanimation.empty())
+                return WAIT_FOR_INPUT;
         }
         return PLAYER_ANIMATION;
     }
@@ -285,6 +283,8 @@ void TowerState::open_character() {
 }
 
 void TowerState::open_inventory() {
+    open_character();
+
     if (window[1]) {
         if (window[1]->bmp == asset::get_tower(29))
             return;
@@ -299,6 +299,8 @@ void TowerState::open_inventory() {
 }
 
 void TowerState::open_container(tower::Container* cont) {
+    open_inventory();
+
     if (window[2]) {
         if (window[1]->bmp == asset::get_tower(30))
             return;
@@ -407,6 +409,7 @@ void TowerState::add_rows(TowerIterator prev, int min_r, int max_r) {
 void TowerState::reset_twidget() {
     owidget.clear();
     twidget.clear();
+    cfloor = ctower->floor[tower::get_player()->floor];
     cfloor->refresh_objects();
 
     TowerIterator prev = TowerIterator(twidget.before_begin(), owidget.before_begin());

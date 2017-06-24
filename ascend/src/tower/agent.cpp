@@ -49,28 +49,33 @@ AnimationListPair action_attack(Actor* actor, Object* target, Tower* tow) {
         if (Actor* trg = dynamic_cast<Actor*>(target)) {
             int dx = (trg->pos.x/18) - (ts->camera.x/18);
             int dy = (trg->pos.y/18) - (ts->camera.y/18);
-            double hit = ((actor->attr[SPD] * (1 - (1.0/pow(5.1, pow(actor->attr[SPD], 0.25))))) + (trg->attr[SPD] / pow(1.26, pow(trg->attr[SPD], 0.55))))/(double)(actor->attr[SPD] + trg->attr[SPD]);
             engine::Widget* t = nullptr;
             int dmg = 0;
+            double hit = 0.99 - (0.945 * pow(0.25532, pow(actor->attr[SPD] / (double)trg->attr[SPD], 2.4)));
+            //((actor->attr[SPD] * (1 - (1.0/pow(5.1, pow(actor->attr[SPD], 0.25))))) + (trg->attr[SPD] / pow(1.26, pow(trg->attr[SPD], 0.55))))/(double)(actor->attr[SPD] + trg->attr[SPD]);
+            DEBUG_PRINT("SPD(ATK) = " << actor->attr[SPD] << ", SPD(DEF) = " << trg->attr[SPD]);
+            DEBUG_PRINT(" P(H1) = " << hit);
             while (rand2<double>(1.0) <= hit) {
                 ++dmg;
-                hit = pow(hit, 3);
+                hit = pow(hit, 6);
+                DEBUG_PRINT(" P(H" << (dmg+1) << ") = " << hit);
             }
             if (dmg > 0) {
                 DEBUG_PRINT("HITS: " << dmg << ", ATK: " << actor->attr[ATK] << ", DEF: " << trg->attr[DEF]);
-                dmg = (int)round(/*0.3869 */log2(2 * dmg) * log2(((double)actor->attr[ATK]/trg->attr[DEF]) + 1));
+                dmg = (int)round(std::max((int)(dmg * actor->attr[ATK]) - (int)trg->attr[DEF], 0));
                 DEBUG_PRINT("DAMAGE: " << dmg);
                 anim.first.push_front(new engine::ArithmeticAnimation(engine::animation_addition, 4, &trg->pp[MAX_HP], -dmg));
                 anim.first.push_front(new engine::FlashAnimation(&trg->tint, 1, 3));
                 if (dmg >= (int)trg->pp[MAX_HP]) {
-                    //anim.push_front(new engine::FunctionAnimation<engine::TowerState>(ts->reset_twidget, 5, ts));
-                    //anim.push_front(new engine::FunctionAnimation<Floor>(ts->cfloor->refresh_objects, 5, ts->cfloor));
-                    anim.first.push_front(new engine::FunctionAnimation2<Floor, Object>(ts->cfloor->remove, 5, ts->cfloor, trg));
-                    anim.first.push_front(new engine::FunctionAnimation2<Tower, Actor>(ts->ctower->remove, 5, ts->ctower, trg));
                     Object* crps = trg->corpse_data->gen_object(ts->ctower->assets, trg->floor, (trg->pos.x/18) + ts->cfloor->size*(trg->pos.y/18), ts->cfloor->size);
-                    anim.first.push_front(new engine::FunctionAnimation2<Floor, Object>(ts->cfloor->insert, 5, ts->cfloor, crps));
-                    // TODO transfer objects
-                    anim.first.push_front(new engine::FunctionAnimation<engine::TowerState>(ts->reset_twidget, 5, ts));
+                    if (Container* crps_cnt = dynamic_cast<Container*>(crps))
+                        anim.first.push_front(new engine::FunctionAnimation2<charstuff::Inventory, charstuff::Inventory>(charstuff::Inventory::transfer, 5, trg, crps_cnt));
+
+                    anim.first.push_front(new engine::FunctionAnimation2<Floor, Object>(Floor::remove, 5, ts->cfloor, trg));
+                    anim.first.push_front(new engine::FunctionAnimation2<Tower, Actor>(Tower::remove, 5, ts->ctower, trg));
+                    anim.first.push_front(new engine::FunctionAnimation2<Floor, Object>(Floor::insert, 5, ts->cfloor, crps));
+
+                    anim.first.push_front(new engine::FunctionAnimation<engine::TowerState>(engine::TowerState::reset_twidget, 5, ts));
                 }
                 t = ts->insert(new engine::TextWidget(dmg,
                            {
@@ -83,7 +88,7 @@ AnimationListPair action_attack(Actor* actor, Object* target, Tower* tow) {
                                                               Point{ (int)(sped*cos(angel)), -(int)(sped*sin(angel)) },
                                                               &t->crd));
                 //anim.push_front(new engine::FadeAnimation(&t->tint, al_map_rgba(0,0,0,0), 18));
-                anim.second.push_front(new engine::FunctionAnimation2<engine::TowerState, engine::Widget>(ts->remove, 54, ts, t));
+                anim.second.push_front(new engine::FunctionAnimation2<engine::TowerState, engine::Widget>(engine::TowerState::remove, 54, ts, t));
             } else {
                 // TODO miss message
                 t = ts->insert(new engine::TextWidget(al_ustr_new("MISS"),
@@ -93,7 +98,7 @@ AnimationListPair action_attack(Actor* actor, Object* target, Tower* tow) {
                            }, asset::get_pixel_bold()));
                 anim.second.push_front(new engine::MoveAnimation(engine::animation_linmove, 18, Point{ 0, -18 }, &t->crd));
                 anim.second.push_front(new engine::FadeAnimation(&t->tint, al_map_rgba(0, 0, 0, 0), 36));
-                anim.second.push_front(new engine::FunctionAnimation2<engine::TowerState, engine::Widget>(ts->remove, 36, ts, t));
+                anim.second.push_front(new engine::FunctionAnimation2<engine::TowerState, engine::Widget>(engine::TowerState::remove, 36, ts, t));
                 DEBUG_PRINT("MISS");
             }
         }

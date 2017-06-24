@@ -49,11 +49,24 @@ void Floor::refresh_objects() {
     }
 }
 
+std::shared_ptr<Object>* Floor::get_object(Object* o) {
+    for (std::list<std::shared_ptr<Object> >::iterator it = objects.begin(); it != objects.end(); ++it) {
+        if (o == it->get())
+            return &(*it);
+    }
+    return nullptr;
+}
+
 void Floor::insert(Object* o) {
     objects.emplace_front(o);
 }
 
+void Floor::insert_ptr(std::shared_ptr<Object>* o) {
+    objects.push_front(*o);
+}
+
 void Floor::remove(Object* o) {
+    DEBUG_PRINT("REMOVE CALLED.");
     for (std::list<std::shared_ptr<Object> >::iterator it = objects.begin(); it != objects.end(); ++it) {
         if (o == it->get()) {
             objects.erase(it);

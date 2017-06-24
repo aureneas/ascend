@@ -11,8 +11,10 @@ void begin_frame();
 void end_frame();
 
 void fade_out_black();
+void fade_out_white();
 void fade_in();
 
+ALLEGRO_COLOR* get_screen_tint();
 void set_screen_tint(ALLEGRO_COLOR);
 void clear_screen_tint();
 

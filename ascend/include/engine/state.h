@@ -90,9 +90,9 @@ class TowerState: public UIState {
 
         TOWER_STATE interact(int, int);
 
+
         void open_character();
         void open_inventory();
-        void open_container(tower::Container*);
         void close_windows();
         void close_widget(Widget*);
 
@@ -107,11 +107,15 @@ class TowerState: public UIState {
         void reset_twidget();
         void refresh_objects();
         void move_camera(int, int);
+
+        void toggle_character();
+        void toggle_inventory();
+        void open_container(tower::Container*);
 };
 
 struct CameraAnimation: public MoveAnimation {
     TowerState* ts;
-    CameraAnimation(void (*f)(Animation*), u_16 s, Point d, TowerState* t) : MoveAnimation(f, s, d, nullptr), ts(t) {}
+    CameraAnimation(void (*f)(Animation*), u_16 s, Point d, TowerState* t) : Animation(f, s), MoveAnimation(f, s, d, nullptr), ts(t) {}
 };
 
 

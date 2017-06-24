@@ -8,6 +8,8 @@ struct Point {
     bool operator==(Point&);
     Point operator-(Point&);
     void operator+=(Point&);
+
+    Point operator*(int);
 };
 
 #endif // A_POINT_H

@@ -11,6 +11,7 @@
 
 namespace tower {
 
+struct Actor;
 
 struct Object {
     ALLEGRO_BITMAP* bmp;
@@ -22,6 +23,7 @@ struct Object {
 
     Object(ALLEGRO_BITMAP*, int, u_16, u_16, u_16);
     Object(ObjectData*, asset::asset_package*, u_16, u_16, u_16);
+    virtual AnimationListPair interact(Actor*, Tower*);
     virtual void draw(int, int);
 };
 
@@ -31,11 +33,17 @@ struct Wall: public Object {
 };
 
 struct Portal: public Object {
+    Position out;
+
     Portal(Direction, u_16, u_16, u_16);
+    Portal(ObjectData*, asset::asset_package*, Direction, Position, u_16, u_16, u_16);
+    AnimationListPair interact(Actor*, Tower*);
+    void draw(int, int);
 };
 
 struct Container: public Object, public charstuff::Inventory {
     Container(ObjectData*, asset::asset_package*, u_16, u_16, u_16);
+    AnimationListPair interact(Actor*, Tower*);
 };
 
 

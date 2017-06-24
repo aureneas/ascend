@@ -6,7 +6,11 @@ namespace tower {
 
 
 /** OBJECTS **/
-SubObjectData<Container> orb_corpse( /* default bmp */ 4,
+ObjectData stairs_debug(    /* default bmp*/ 5,
+                            /* offset */ 9
+                        );
+
+SubObjectData<Container> orb_corpse(    /* default bmp */ 4,
                                         /* offset */ 2
                                     );
 
@@ -28,13 +32,16 @@ RoomData_Simple r_debug = { /* default tile data */ &tile_debug,
                                 /* is a rectangle? */ true };
 
 /** TOWERS **/
-TowerData t_debug = { /* asset package */ { "lib/package/debug.png", "data/towers/debug_asset.dat", true },
+TowerData t_debug = {
+                        /* asset package */ { "lib/package/debug.png", "data/towers/debug_asset.dat", true },
                         /* number of floors */ 5,
                         /* width/height of floors */ 50,
                         /* minimum number of tiles per floor */ 1000,
                         /* tower generation function */ standard_generator,
                         /* basic tile bmp */ 1,
-                        /* basic wall bmp */ 2 };
+                        /* basic wall bmp */ 2,
+                        /* portal data */ &stairs_debug
+                    };
 
 
 /** VISIBLE FUNCTIONS **/

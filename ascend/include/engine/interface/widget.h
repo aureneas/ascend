@@ -44,8 +44,8 @@ struct TextWidget: public Widget {
     int flags;
     int width;
 
-    TextWidget(ALLEGRO_USTR*, Point, ALLEGRO_FONT*, int = 0, bool = false);
-    TextWidget(int, Point);
+    TextWidget(ALLEGRO_USTR*, Point, ALLEGRO_FONT*, int = 0, bool = false, int = 0);
+    TextWidget(int, Point, int = 0);
     virtual ~TextWidget();
     virtual void init();
     virtual void draw(int, int);
@@ -57,7 +57,7 @@ struct ValueWidget: public TextWidget {
     u_16 last;
     int mod;
 
-    ValueWidget(u_16*, Point, int = 0);
+    ValueWidget(u_16*, Point, int = 0, int = ALLEGRO_ALIGN_CENTER);
     void init();
     void draw(int, int);
 };

@@ -1,0 +1,35 @@
+1       Human base, walk cycle 0.
+2       Human base, walk cycle 1.
+3       Human base, walk cycle 2.
+4       Portal to outside, as viewed within tower.
+5       Body equipment, plain base.
+6       Body equipment, chain base.
+7       Body accessory, sash (left to right).
+8       Body accessory, small shoulderpads.
+9       Body accessory, large shoulderpads.
+10      Body accessory, belt.
+11      Head equipment, helm.
+12      Head equipment, mage hat.
+13      Head equipment, priest hat.
+14      Head equipment, skull cap.
+15      Head equipment, puffy hat.
+16      Head accessory, bandana.
+17      Head accessory, horns.
+18      Head accessory, feather.
+19      Head accessory, crest.
+20      Head accessory, tie-back.
+21      Lior's hair.
+22      Body accessory, pants.
+23      Body accessory, puffy pants.
+24      Body accessory, robe bottom.
+25      Upgrade button, greyed out.
+26      Upgrade button, ready.
+27      HUD at top of screen.
+28      Character stats window.
+29      Inventory window, for player.
+30      Inventory window, for dead NPCs.
+31      White pixel. (Used for constructing value bars.)
+32      Item BG, for equipped items.
+33      Description window.
+34      Description window, with stat adjustments shown at bottom.
+35      Shading for stairs, descending.

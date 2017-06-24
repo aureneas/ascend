@@ -54,20 +54,22 @@ int FWidget::update_event(ALLEGRO_EVENT* e, int x, int y) {
 
 
 
-TextWidget::TextWidget(ALLEGRO_USTR* t, Point p, ALLEGRO_FONT* f, int w, bool pr) {
+TextWidget::TextWidget(ALLEGRO_USTR* t, Point p, ALLEGRO_FONT* f, int w, bool pr, int fl) {
     crd = p;
     text = t;
     font = f;
     width = w;
     protect_text = pr;
+    flags = fl;
     init();
 }
 
-TextWidget::TextWidget(int s, Point p) {
+TextWidget::TextWidget(int s, Point p, int f) {
     crd = p;
     text = al_ustr_newf("%d", s);
     font = asset::get_pixel_bold();
     protect_text = false;
+    flags = f;
     init();
 }
 
@@ -97,10 +99,11 @@ bool TextWidget::in_bounds(int x, int y) {
 }
 
 
-ValueWidget::ValueWidget(u_16* v, Point p, int m) : TextWidget(al_ustr_newf("%02d", std::max(1, (int)(*v) + m)), p, asset::get_pixel_large()) {
+ValueWidget::ValueWidget(u_16* v, Point p, int m, int f) : TextWidget(al_ustr_newf("%02d", std::max(0, (int)(*v) + m)), p, asset::get_pixel_large()) {
     value = v;
     last = *v;
     mod = m;
+    flags = f;
     init();
 }
 
@@ -113,7 +116,6 @@ void ValueWidget::init() {
         tint = al_map_rgb(128, 0, 0);
     else
         tint = al_map_rgb(0, 0, 0);
-    flags = ALLEGRO_ALIGN_CENTER;
 }
 
 void ValueWidget::draw(int x, int y) {

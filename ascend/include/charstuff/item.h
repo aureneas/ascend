@@ -63,6 +63,7 @@ struct Inventory {
     Item** get(u_16);
     void insert(Item*);
     void insert(Item*, u_16);
+    void transfer(Inventory*);
 };
 
 

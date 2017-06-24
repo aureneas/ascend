@@ -86,4 +86,14 @@ void Inventory::insert(Item* it, u_16 index) {
     }
 }
 
+/**
+ *  Transfers all items FROM this TO inv
+ */
+void Inventory::transfer(Inventory* inv) {
+    for (u_16 i = size; i > 0; --i) {
+        if (item[i - 1])
+            inv->insert(item[i - 1], i - 1);
+    }
+}
+
 }

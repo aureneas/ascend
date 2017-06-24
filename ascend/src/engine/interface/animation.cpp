@@ -15,27 +15,42 @@ namespace engine {
 
 
 
+Animation::Animation(void (*f)(Animation*), u_16 s) {
+    afunc = f;
+    frame = 0;
+    speed = s;
+}
+
 bool Animation::update_frame() {
     if (afunc) afunc(this);
     return (++frame == speed);
 }
 
+DelayAnimation::DelayAnimation(void (*f)(Animation*), u_16 d, u_16 s) : Animation(f, s) {
+    delay = d;
+}
+
 bool DelayAnimation::update_frame() {
-    if (++frame == speed) {
+    if (delay > 0) {
+        if (++frame == delay) {
+            speed -= delay;
+            frame = 0;
+            delay = 0;
+        }
+    }
+
+    //DEBUG_PRINT("frame = " << frame << ", speed = " << speed << ", delay = " << delay);
+    if (delay == 0) {
         if (afunc) afunc(this);
-        return true;
+        return (++frame == speed);
     }
     return false;
 }
 
 
-SpriteAnimation::SpriteAnimation(ALLEGRO_BITMAP** p, u_16 s, int count, ...) : pbmp(p) {
+SpriteAnimation::SpriteAnimation(ALLEGRO_BITMAP** p, u_16 s, int count, ...) : Animation(animation_sprite, s), pbmp(p) {
     va_list param;
     va_start(param, count);
-
-    afunc = animation_sprite;
-    speed = s;
-    frame = 0;
 
     delay_arr = new int[count/2];
     bmp_arr = new ALLEGRO_BITMAP*[count/2];
@@ -46,27 +61,33 @@ SpriteAnimation::SpriteAnimation(ALLEGRO_BITMAP** p, u_16 s, int count, ...) : p
     va_end(param);
 }
 
-FlashAnimation::FlashAnimation(ALLEGRO_COLOR* c, u_16 d, u_16 l) {
-    speed = d + l;
-    frame = 0;
-    delay = d;
-
-    afunc = animation_flash;
+FlashAnimation::FlashAnimation(ALLEGRO_COLOR* c, u_16 d, u_16 l) : Animation(animation_flash, d + l), DelayAnimation(animation_flash, d, d + l) {
     tint = c;
     original = *c;
 }
 
-FadeAnimation::FadeAnimation(ALLEGRO_COLOR* c, ALLEGRO_COLOR d, u_16 s) {
-    speed = s;
-    frame = 0;
-    afunc = animation_linfade;
+FadeAnimation::FadeAnimation(ALLEGRO_COLOR* c, ALLEGRO_COLOR d, u_16 s) : Animation(animation_linfade, s) {
     tint = c;
+    fade_to = d;
+}
 
-    unsigned char c1[4], c2[4];
-    al_unmap_rgba(*c, c1, c1+1, c1+2, c1+3);
-    al_unmap_rgba(d, c2, c2+1, c2+2, c2+3);
-    for (int i = 3; i >= 0; --i)
-        dc[i] = c2[i] - c1[i];
+DelayFadeAnimation::DelayFadeAnimation(ALLEGRO_COLOR* c, ALLEGRO_COLOR d, u_16 dl, u_16 s) : Animation(animation_linfade, s), FadeAnimation(c, d, s), DelayAnimation(animation_linfade, dl, s) {}
+
+MoveAnimation::MoveAnimation(void (*f)(Animation*), u_16 s, Point d, Point* p) : Animation(f, s) {
+    point = p;
+    dist = d;
+}
+
+DelayMoveAnimation::DelayMoveAnimation(void (*f)(Animation*), u_16 dl, u_16 s, Point d, Point* p) : Animation(f, s), MoveAnimation(f, s, d, p), DelayAnimation(f, dl, s) {}
+
+VelocityAnimation::VelocityAnimation(void (*f)(Animation*), u_16 s, Point v, Point* p) : Animation(f, s) {
+    point = p;
+    vel = v;
+}
+
+ArithmeticAnimation::ArithmeticAnimation(void (*f)(Animation*), u_16 s, u_16* v, int c) : Animation(f, s + 1), DelayAnimation(f, s, s + 1) {
+    value = v;
+    change = c;
 }
 
 
@@ -89,11 +110,11 @@ void animation_sprite(Animation* a) {
 
 /**  Animation of flashing.  **/
 void animation_flash(Animation* a) {
-    FlashAnimation* fa = static_cast<FlashAnimation*>(a);
-    if (fa->frame == fa->speed-1)
+    FlashAnimation* fa = dynamic_cast<FlashAnimation*>(a);
+    if (fa->frame == fa->speed - 1)
         *fa->tint = fa->original;
-    else if (fa->frame == fa->delay-1)
-        *fa->tint = al_map_rgba(255,32,32,255);
+    else if (fa->frame == 0)
+        *fa->tint = al_map_rgba(255, 32, 32, 255);
 }
 
 
@@ -135,7 +156,7 @@ std::vector<bool>* get_linear(int d, u_16 t) {
 
 /**  Animation of linear movement.  **/
 void animation_linmove(Animation* a) {
-    MoveAnimation* ma = static_cast<MoveAnimation*>(a);
+    MoveAnimation* ma = dynamic_cast<MoveAnimation*>(a);
 
     ma->point->x += ma->dist.x/(int)ma->speed;
     ma->point->y += ma->dist.y/(int)ma->speed;
@@ -147,7 +168,7 @@ void animation_linmove(Animation* a) {
 
 /**  Camera linear movement.  **/
 void animation_camlinmove(Animation* a) {
-    CameraAnimation* ca = static_cast<CameraAnimation*>(a);
+    CameraAnimation* ca = dynamic_cast<CameraAnimation*>(a);
     int dx = ca->dist.x/(int)ca->speed;
     if (get_linear(abs(ca->dist.x)%ca->speed, ca->speed)->at(ca->frame))
         dx += SIGN(ca->dist.x);
@@ -158,7 +179,16 @@ void animation_camlinmove(Animation* a) {
 }
 
 void animation_linfade(Animation* a) {
-    FadeAnimation* fa = static_cast<FadeAnimation*>(a);
+    FadeAnimation* fa = dynamic_cast<FadeAnimation*>(a);
+
+    if (fa->frame == 0) {
+        unsigned char c1[4], c2[4];
+        al_unmap_rgba(*fa->tint, c1, c1+1, c1+2, c1+3);
+        al_unmap_rgba(fa->fade_to, c2, c2+1, c2+2, c2+3);
+        for (int i = 3; i >= 0; --i)
+            fa->dc[i] = c2[i] - c1[i];
+    }
+
     unsigned char cv[4];
     al_unmap_rgba(*fa->tint, cv, cv+1, cv+2, cv+3);
     for (int i = 3; i >= 0; --i) {

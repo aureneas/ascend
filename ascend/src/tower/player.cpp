@@ -21,6 +21,7 @@ void new_player() {
     charstuff::Equip* std_clothes = charstuff::get_std_clothes()->gen_item();
     player_character->insert(std_clothes);
     player_character->equip(std_clothes);
+    player_character->insert(charstuff::get_op_armor()->gen_item());
 }
 
 Player* get_player() {
@@ -46,6 +47,7 @@ Player::Player() : Human(0,0,1), upgr{10,18,13,12,11,12} {
 
 Player::~Player() {
     DEBUG_PRINT("deconstruct Player called.");
+
 }
 
 void Player::incr_attr(Attribute a) {

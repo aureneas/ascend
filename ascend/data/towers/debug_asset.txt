@@ -1,0 +1,5 @@
+1       Basic tile.
+2       Basic wall.
+3       Enemy: orb.
+4       Corpse: orb.
+5       Basic stairs.

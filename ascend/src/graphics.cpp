@@ -66,9 +66,12 @@ void begin_frame() {
                                     (fade_rate*a1) + ((1-fade_rate)*a2));
         screen_tint_alpha = (fade_rate*a1) + ((1-fade_rate)*a2);
         ++fade_frame;
-    } else if (r1 != r2 || g1 != g2 || b1 != b2 || a1 != a2) {
+    } else if (fade_frame == FADE_SPEED) {
         screen_tint = target_tint;
         screen_tint_alpha = a2;
+        ++fade_frame;
+    } else {
+        screen_tint_alpha = a1;
     }
 }
 
@@ -92,6 +95,10 @@ void fade_in() {
     set_fade_speed(60);
 }
 
+
+ALLEGRO_COLOR* get_screen_tint() {
+    return &screen_tint;
+}
 
 void set_screen_tint(ALLEGRO_COLOR color) {
     screen_tint = color;

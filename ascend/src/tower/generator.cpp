@@ -174,13 +174,27 @@ Tower* standard_generator(TowerData* td, bool from_bottom) {
             u_16 stair = rooms[rooms.size() - 1];
 
             u_16 ctile = stair;
+            Direction s_face;
             int dx = 0;
             int dy = 0;
             int d = 0;
             while (true) {
                 if (c_tower->floor[f]->tile[ctile] != nullptr) {
                     if (c_tower->floor[f]->tile[ctile]->occupy == nullptr) {
-                        break;
+                        if (ctile % td->size > 1 && ctile % td->size < td->size - 1 && c_tower->floor[f]->tile[ctile + 1] != nullptr) {
+                            if (c_tower->floor[f]->tile[ctile + 1]->occupy == nullptr) {
+                                stair = ctile;
+                                s_face = EAST;
+                                break;
+                            }
+                        }
+                        if (ctile / td->size > 1 && ctile / td->size < td->size - 1 && c_tower->floor[f]->tile[ctile + td->size] != nullptr) {
+                            if (c_tower->floor[f]->tile[ctile + td->size]->occupy == nullptr) {
+                                stair = ctile;
+                                s_face = SOUTH;
+                                break;
+                            }
+                        }
                     }
                 }
 
@@ -204,12 +218,22 @@ Tower* standard_generator(TowerData* td, bool from_bottom) {
                     ctile = stair + dx + (td->size * dy);
                 }
             }
-            // TODO place stairs
+            u_16 stair_out = stair - (s_face == EAST ? 1 : td->size);
+            DEBUG_PRINT("STAIRS (FLOOR " << f << ") located at <" << (stair % td->size) << ", " << (stair / td->size) << ">");
+            c_tower->floor[f]->tile[stair]->occupy = new Portal(td->portal_t, c_tower->assets, s_face,
+                                                        { f + 1, stair_out }, f, stair, td->size);
+            c_tower->floor[f]->objects.emplace_back(c_tower->floor[f]->tile[stair]->occupy);
 
             // set up for next floor
             rooms.clear();
-            rooms.push_back(stair);
-            // TODO generate room here
+            rooms.push_back(stair_out);
+            c_tower->floor[f + 1]->tile[stair] = new Tile();
+            c_tower->floor[f + 1]->tile[stair]->floor = nullptr;//c_tower->assets->get(td->basic_t);
+            c_tower->floor[f + 1]->tile[stair]->occupy = new Portal(td->portal_t, c_tower->assets, (Direction)((s_face+2)%4),
+                                                            { f, (2 * stair) - stair_out }, f, stair, td->size);
+            c_tower->floor[f + 1]->objects.emplace_back(c_tower->floor[f + 1]->tile[stair]->occupy);
+            c_tower->floor[f + 1]->tile[stair_out] = new Tile();
+            c_tower->floor[f + 1]->tile[stair_out]->floor = c_tower->assets->get(td->basic_t);
         } else {
             // TODO generate exit
             // TODO place player (if !from_bottom)

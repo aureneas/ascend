@@ -28,6 +28,7 @@ struct Actor: public Object, public charstuff::Inventory {
 
         Actor(u_16, u_16, u_16);
         Actor(ActorData*, asset::asset_package*, u_16, u_16, u_16);
+        virtual AnimationListPair interact(Actor*, Tower*);
         virtual void draw(int, int);
         Agent agent;
 };
@@ -40,6 +41,7 @@ struct Human: public Actor {
         charstuff::Equip* equips[6];
 
         Human(u_16, u_16, u_16);
+        AnimationListPair interact(Actor*, Tower*);
         void equip(charstuff::Equip*);
         void dequip(charstuff::EQUIPMENT_SLOT);
         void toggle_equip(charstuff::Equip*);

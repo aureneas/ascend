@@ -27,6 +27,10 @@ void Actor::evaluate_mods() {
     }
 }
 
+AnimationListPair Actor::interact(Actor* a, Tower* t) {
+    return action_attack(a, this, t);
+}
+
 void Actor::draw(int x, int y) {
     if (bmp) graphics::draw_tinted(bmp, tint, x, y, (face >= 2 ? ALLEGRO_FLIP_HORIZONTAL : 0));
 }
@@ -38,6 +42,11 @@ Human::Human(u_16 f, u_16 t, u_16 s) : Actor(f, t, s), equips{nullptr} {
     for (int i = 3; i >= 0; --i)
         attrp[2 + i] = 10;
     evaluate_mods();
+}
+
+AnimationListPair Human::interact(Actor* a, Tower* t) {
+    return Actor::interact(a, t);
+    // TODO add conversation feature
 }
 
 void Human::abs_equip(charstuff::Equip* e, charstuff::EQUIPMENT_SLOT slot) {
